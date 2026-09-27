@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Application - MoMo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: #f4f4f4;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: #ffffff;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 3px solid #ffcc00;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .back-arrow {
+            font-size: 22px;
+            color: #333;
+            text-decoration: none;
+            line-height: 1;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .back-arrow:hover {
+            transform: translateX(-3px);
+        }
+
+        .logo-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: #ffcc00;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 11px;
+            color: #004f9f;
+            line-height: 1;
+            text-align: center;
+            border: 2px solid #004f9f;
+        }
+
+        .logo-text {
+            font-weight: 800;
+            font-size: 20px;
+            color: #004f9f;
+            letter-spacing: -0.5px;
+        }
+
+        .header-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #222;
+            margin-left: 4px;
+            flex: 1;
+        }
+
+        .hamburger {
+            font-size: 22px;
+            color: #333;
+            cursor: pointer;
+            line-height: 1;
+            user-select: none;
+        }
+
+        /* ===== MAIN ===== */
+        .main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            padding: 40px 16px 60px;
+        }
+
+        .card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 520px;
+            border-radius: 16px;
+            padding: 40px 36px 36px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            height: fit-content;
+        }
+
+        .card h1 {
+            font-size: 28px;
+            font-weight: 800;
+            color: #111;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .step-text {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        /* ===== PROGRESS BAR ===== */
+        .progress {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 32px;
+            justify-content: center;
+        }
+
+        .progress .bar {
+            height: 5px;
+            width: 70px;
+            border-radius: 3px;
+            background: #e0e0e0;
+        }
+
+        .progress .bar.active {
+            background: #ffcc00;
+        }
+
+        /* ===== FORM ===== */
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 15px;
+            font-family: inherit;
+            border: 1.5px solid #ddd;
+            border-radius: 10px;
+            background: #fff;
+            color: #111;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #ffcc00;
+            box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.2);
+        }
+
+        .form-group select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            background-size: 18px;
+            padding-right: 44px;
+            cursor: pointer;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 90px;
+        }
+
+        .form-group textarea::placeholder,
+        .form-group input::placeholder {
+            color: #aaa;
+        }
+
+        /* ===== NEXT BUTTON ===== */
+        .next-btn {
+            display: block;
+            width: 100%;
+            background: #ffcc00;
+            color: #111;
+            border: none;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            margin-top: 32px;
+            text-transform: uppercase;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .next-btn:hover {
+            background: #e6b800;
+        }
+
+        .next-btn:active {
+            transform: scale(0.99);
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            background: #111;
+            color: #ffcc00;
+            text-align: center;
+            padding: 18px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 480px) {
+            .card {
+                padding: 28px 20px;
+            }
+            .card h1 {
+                font-size: 23px;
+            }
+            .header-title {
+                font-size: 14px;
+            }
+            .logo-text {
+                font-size: 18px;
+            }
+            .progress .bar {
+                width: 55px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+        <a href="index.html" class="back-arrow">←</a>
+        <div class="logo-box">
+            <div class="logo-icon">MoMo<br>MTN</div>
+            <span class="logo-text">MoMo</span>
+        </div>
+        <span class="header-title">MTN Mobile Services</span>
+        <span class="hamburger">☰</span>
+    </header>
+
+    <!-- MAIN -->
+    <main class="main">
+        <div class="card">
+            <h1>Loan Application</h1>
+            <p class="step-text">Step 1 of 3</p>
+
+            <!-- Progress bar -->
+            <div class="progress">
+                <div class="bar active"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+            </div>
+
+            <!-- FORM -->
+            <form id="loanForm">
+                <!-- Loan Type -->
+                <div class="form-group">
+                    <label for="loanType">Loan Type</label>
+                    <select id="loanType" name="loanType">
+                        <option value="personal">Personal Loan</option>
+                        <option value="business">Business Loan</option>
+                        <option value="education">Education Loan</option>
+                        <option value="emergency">Emergency Loan</option>
+                    </select>
+                </div>
+
+                <!-- Loan Amount -->
+                <div class="form-group">
+                    <label for="loanAmount">Loan Amount (ZMW)</label>
+                    <input type="number" id="loanAmount" name="loanAmount" placeholder="5,000" value="5000">
+                </div>
+
+                <!-- Loan Term -->
+                <div class="form-group">
+                    <label for="loanTerm">Loan Term</label>
+                    <select id="loanTerm" name="loanTerm">
+                        <option value="6">6 Months</option>
+                        <option value="12" selected>12 Months</option>
+                        <option value="24">24 Months</option>
+                        <option value="36">36 Months</option>
+                        <option value="48">48 Months</option>
+                        <option value="60">60 Months</option>
+                    </select>
+                </div>
+
+                <!-- Purpose of Loan -->
+                <div class="form-group">
+                    <label for="purpose">Purpose of Loan</label>
+                    <textarea id="purpose" name="purpose" placeholder="What will you use the loan for?"></textarea>
+                </div>
+
+                <!-- NEXT STEP -->
+                <a href="details.html" class="next-btn" id="nextBtn">Next Step</a>
+            </form>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        © 2026 MoMo
+    </footer>
+
+    <script>
+        // ─── Read amount & term from URL (sent from index.html) ───
+        const params = new URLSearchParams(window.location.search);
+
+        const amountFromUrl = params.get('amount');
+        const termFromUrl   = params.get('term');
+
+        if (amountFromUrl) {
+            document.getElementById('loanAmount').value = amountFromUrl;
+        }
+        if (termFromUrl) {
+            document.getElementById('loanTerm').value = termFromUrl;
+        }
+
+        // ─── Pass form data to details.html on Next Step ───
+        document.getElementById('nextBtn').addEventListener('click', function () {
+            const loanType   = document.getElementById('loanType').value;
+            const loanAmount = document.getElementById('loanAmount').value;
+            const loanTerm   = document.getElementById('loanTerm').value;
+            const purpose    = encodeURIComponent(document.getElementById('purpose').value);
+
+            this.href = `details.html?type=${loanType}&amount=${loanAmount}&term=${loanTerm}&purpose=${purpose}`;
+        });
+    </script>
+</body>
+</html>
