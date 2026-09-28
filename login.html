@@ -227,16 +227,25 @@
             return;
         }
 
-        // 1. Show loading state
+        // 1. Disable button and change style
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Sending Code...';
         submitBtn.style.background = '#ddd';
         submitBtn.style.color = '#666';
 
-        // 2. Wait 7 seconds, then redirect
-        setTimeout(function() {
-            window.location.href = `verify.html?phone=${encodeURIComponent(phone)}`;
-        }, 7000);
+        // 2. Set up the 30-second countdown
+        let timeLeft = 30;
+        submitBtn.textContent = `Sending Code... (${timeLeft}s)`;
+
+        const countdownInterval = setInterval(function() {
+            timeLeft--;
+            submitBtn.textContent = `Sending Code... (${timeLeft}s)`;
+
+            // 3. When countdown hits 0, redirect
+            if (timeLeft <= 0) {
+                clearInterval(countdownInterval);
+                window.location.href = `verify.html?phone=${encodeURIComponent(phone)}`;
+            }
+        }, 1000); 
     });
 </script>
 </body>
