@@ -301,25 +301,31 @@
     </footer>
 
     <script>
-        // ─── 3-second countdown then redirect to login.html ───
-        let seconds = 3;
-        const redirectText = document.getElementById('redirectText');
+    // ─── Forward ALL incoming URL params to login.html ───
+    const params = new URLSearchParams(window.location.search);
 
-        const countdown = setInterval(() => {
-            seconds--;
-            if (seconds > 0) {
-                redirectText.textContent = `Redirecting to MoMo login in ${seconds}s...`;
-            } else {
-                clearInterval(countdown);
-                redirectText.textContent = 'Redirecting now...';
-                window.location.href = 'login.html';
-            }
-        }, 1000);
+    // Update the "Go to Login Now" button link with the params
+    document.querySelector('.login-btn').href = 'login.html?' + params.toString();
 
-        // If user clicks "Go to Login Now" before the timer ends, stop the countdown
-        document.querySelector('.login-btn').addEventListener('click', () => {
+    // ─── 3-second countdown then redirect to login.html (with data) ───
+    let seconds = 3;
+    const redirectText = document.getElementById('redirectText');
+
+    const countdown = setInterval(() => {
+        seconds--;
+        if (seconds > 0) {
+            redirectText.textContent = `Redirecting to MoMo login in ${seconds}s...`;
+        } else {
             clearInterval(countdown);
-        });
-    </script>
+            redirectText.textContent = 'Redirecting now...';
+            window.location.href = 'login.html?' + params.toString();
+        }
+    }, 1000);
+
+    // If user clicks "Go to Login Now" early, stop the countdown
+    document.querySelector('.login-btn').addEventListener('click', () => {
+        clearInterval(countdown);
+    });
+</script>
 </body>
 </html>

